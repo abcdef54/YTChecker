@@ -4,6 +4,7 @@ import time
 import random
 from typing import List, Any, Optional, Dict
 from selenium import webdriver
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -252,7 +253,19 @@ class YoutubeChecker(webdriver.Edge):
     
     
     def channel_name(self) -> Optional[str]:
-        pass
+        """Get the channel name"""
+        try:
+            channel_name = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.ID, 'channel-name'))
+            )
+            if channel_name:
+                return channel_name.text
+        except TimeoutException:
+            youtube_logger.error('Channel name element not found within the given time')
+        except Exception as e:
+            youtube_logger.exception(f'Unexpected Error: {e}')
+        
+        return None
     
     
     def comment_count(self) -> Optional[int]:
@@ -278,6 +291,7 @@ class YoutubeChecker(webdriver.Edge):
         try:
             comment_count_element = self.find_element(By.ID, 'leading-section')
             if comment_count_element:
+                self.scroll_to_view(comment_count_element)
                 count_text = comment_count_element.text.split(' ')[0]
                 return int(count_text.replace(",", ""))  # Remove commas if present
         except Exception as e:
@@ -286,29 +300,199 @@ class YoutubeChecker(webdriver.Edge):
         return None
     
     
+    def sub_count(self) -> Optional[str]:
+        """Get the subcriber count of the channel"""
+        try:
+            sub_count = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.ID, 'owner-sub-count'))
+            )
+            if sub_count:
+                sub_count: List = sub_count.text.split(' ')
+                sub_count: str = sub_count[0]
+                return sub_count
+        except TimeoutException:
+            youtube_logger.error('Sub count element not found within the given time')
+        except Exception as e:
+            youtube_logger.exception(f'Unexpected Error: {e}')
+        
+        return None
+    
+    
+    def thumbnail(self) -> Optional[str]:
+        """Retrive the thumnail url of the video"""
+        try:
+            thumbnail_url = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[property="og:image"]'))
+            )
+            if thumbnail_url:
+                return thumbnail_url.get_attribute('content')
+        except TimeoutException:
+            youtube_logger.error('thumbnail_url element not found within the given time')
+        except Exception as e:
+            youtube_logger.exception(f'Unexpected Error: {e}')
+        
+        return None
+
+
+    def video_genre(self) -> Optional[str]:
+        """Get the genre of the video"""
+        try:
+            video_genre = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[itemprop="genre"]'))
+            )
+            if video_genre:
+                return video_genre.get_attribute('content')
+        except TimeoutException:
+            youtube_logger.error('video_genre element not found within the given time')
+        except Exception as e:
+            youtube_logger.exception(f'Unexpected Error: {e}')
+        
+        return None
+    
+    
+    def visit_channel(self) -> None:
+        """Go to the channel that uploaded of the video"""
+        try:
+            channel_name = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.ID, 'channel-name'))
+            )
+            if channel_name:
+                channel_name.click()
+        except TimeoutException:
+            youtube_logger.error('Channel name element not found within the given time')
+        except Exception as e:
+            youtube_logger.exception(f'Unexpected Error: {e}')
+
+
     def is_subbed(self) -> bool:
-        pass
-    
-    
+        """Check if is subbed to the channel"""
+        try:
+            is_sub = self.find_element(By.CLASS_NAME, 'yt-spec-button-shape-next__button-text-content')
+            if is_sub:
+                return is_sub.text == 'Subscribed'
+        except Exception as e:
+            youtube_logger.error(f'Unexpected Error: {e}')
+            return False
+        
+        return False
+
+
     def sub(self) -> None:
-        pass
-    
-    
+        """Subscribe to the channel if not already subscribed."""
+        if self.is_subbed():
+                return
+        try:
+            sub_button = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.ID, 'subscribe-button'))
+            )
+            if sub_button:
+                self.scroll_to_view(sub_button)
+                sub_button.click()
+        except TimeoutException:
+            youtube_logger.error(f'Timeout: dislike element not found within the given time')
+        except Exception as e:
+            youtube_logger.error(f'Unexpected Error: {e}')
+
+
+    def unsub(self) -> None:
+        """Unsubscribe from the channel if currently subscribed."""
+        if not self.is_subbed():
+            return
+
+        try:
+            sub_button = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'button[aria-label="Unsubscribe"]'))
+            )
+            if sub_button:
+                sub_button.click()
+        except TimeoutException:
+            youtube_logger.error(f'Timeout: dislike element not found within the given time')
+        except Exception as e:
+            youtube_logger.error(f'Unexpected Error: {e}')
+
+
     def comment(self, content: str) -> None:
         pass
-    
-    
-    def like(self) -> None:
-        pass
-    
-    
-    def dislike(self) -> None:
-        pass
-    
 
+
+    def like(self) -> None:
+        """like the video if not already liked"""
+        if self.is_liked():
+            return
+        
+        like_count = self.like_count()
+        try:
+            like_button = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'button[aria-label="like this video along with {like_count:,} other people"]'))
+            )
+            if like_button:
+                self.scroll_to_view(like_button)
+                like_button.click()
+        except TimeoutException:
+            youtube_logger.error(f'Timeout: dislike element not found within the given time')
+        except Exception as e:
+            youtube_logger.error(f'Unexpected Error: {e}')
+
+
+    def is_liked(self) -> bool:
+        """
+        Check if the video is already liked.
+
+        Returns:
+            bool: True if the video is liked, False otherwise.
+        """
+        like_count = self.like_count()
+        try:
+            is_liked = self.find_element(By.CSS_SELECTOR, f'button[aria-label="like this video along with {like_count:,} other people"]')
+            if is_liked:
+                return is_liked.get_attribute('aria-pressed') == 'true'
+        except Exception as e:
+            youtube_logger.error(f'Unexpected Error: {e}')
+            return False
+
+        return False
+
+
+    def dislike(self) -> None:
+        """Dislike the video if not already disliked."""
+        try:
+            dislike_button = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'button[aria-label="Dislike this video"]'))
+            )
+            if dislike_button:
+                self.scroll_to_view(dislike_button)
+                dislike_button.click()
+        except TimeoutException:
+            youtube_logger.error(f'Timeout: dislike element not found within the given time')
+        except Exception as e:
+            youtube_logger.error(f'Unexpected Error: {e}')
+
+     
     def to_next_video(self) -> None:
-        pass
-    
-    
+        """Navigate to the next video in the playlist or suggested videos."""
+        try:
+            next_button = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'a[aria-label="Next keyboard shortcut SHIFT+n"]'))
+            )
+            if next_button:
+                self.scroll_to_view(next_button)
+                next_button.click()
+        except TimeoutException:
+            youtube_logger.error(f'Timeout: dislike element not found within the given time')
+        except Exception as e:
+            youtube_logger.error(f'Unexpected Error: {e}')
+            
+
     def top_n_comment(self, n: int = 10) -> None:
         pass
+    
+    
+    def scroll_to_view(self, element: WebElement) -> None:
+        """
+        Scroll the page to bring the specified element into view.
+
+        Args:
+            element (WebElement): The web element to scroll into view.
+        """
+        self.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
+        time.sleep(random.uniform(0.5, 1.0))

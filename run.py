@@ -2,6 +2,6 @@ from youtube_find.youtube import YoutubeChecker
 import time
 
 bot = YoutubeChecker()
-bot.open('https://www.youtube.com/watch?v=lc73yOh5taA')
+bot.open('https://www.youtube.com/watch?v=qC-DZ3fnclA')
 
-print(f'comment: {bot.comment_count()}')
+bot.dislike()
