@@ -1,4 +1,7 @@
 import os
+import logging
+import time
+import random
 from typing import List, Any, Optional, Dict
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -6,32 +9,47 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service
+from selenium.common.exceptions import TimeoutException
 import youtube_find.constant as CONST
 
 os.system('cls')
 
+# Config logger
+logging.basicConfig(level=logging.ERROR,
+                    filename='logs/app.log',
+                    filemode='w',
+                    format='%(asctime)s - %(levelname)s - %(filename)s - %(module)s - %(funcName)s')
+
+youtube_logger = logging.getLogger(__name__)
+
+
+# Selenium options
 edge_options = Options()
 edge_options.add_experimental_option('detach', True)
+
 
 class YoutubeChecker(webdriver.Edge):
     def __init__(self, driver_path: str = CONST.webdriver_path, auto_closing: bool = False) -> None:
         self.driver_path = driver_path
-        service = Service(executable_path='D:\Study\Programming\WebDrivers\msedgedriver.exe')
+        service = Service(executable_path=self.driver_path)
         
         self.auto_closing = auto_closing
         if not self.auto_closing:
             super(YoutubeChecker, self).__init__(options=edge_options,service = service)
         else:
             super(YoutubeChecker, self).__init__(service = service)
+
         
     
     def open(self, url: str = CONST.base_url,full_screen: bool = False) -> None:
+        """Open a URL and optionally make the window fullscreen."""
         self.get(url)
         if full_screen:
             self.fullscreen_window()
         
     
     def search(self, content: str) -> None:
+        """Search for the specified content on YouTube."""
         try:
             search_box = WebDriverWait(self, 10).until(
                 EC.presence_of_element_located((By.NAME, 'search_query'))
@@ -41,37 +59,46 @@ class YoutubeChecker(webdriver.Edge):
                 search_box.click()
                 search_box.send_keys(content)
                 search_box.submit()
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: Search box not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error: {e}')
     
     
     def title(self) -> Optional[str]:
+        """Retrive the title of the video"""
         try:
             title = WebDriverWait(self, 10).until(
                 EC.presence_of_element_located((By.ID, 'title'))
             )
             if title:
                 return title.text
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: Title element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
             
         return None
         
     
     def url(self) -> Optional[str]:
+        """Retrive the url of the video"""
         try:
             url = WebDriverWait(self, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[property="og:url"]'))
             )
             if url:
                 return url.get_attribute('content')
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: url element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
             
         return None
     
     
     def like_count(self) -> Optional[int]:
+        """Retrive the like count as an integer"""
         try:
             like_count = WebDriverWait(self, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'button[title="I like this"]'))
@@ -82,21 +109,26 @@ class YoutubeChecker(webdriver.Edge):
                 for token in like_num:
                     if token.replace(',','').isdigit():
                         return int(token.replace(',',''))
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: like count element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
         
         return None
     
     
     def view_count(self) -> Optional[int]:
+        """Retrive the view count as an integer"""
         try:
             view_count = WebDriverWait(self, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[itemprop="interactionCount"]'))
             )
             if view_count:
                 return int(view_count.get_attribute('content'))
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: view count element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
         
         return None
     
@@ -108,8 +140,10 @@ class YoutubeChecker(webdriver.Edge):
             )
             if date:
                 return date.get_attribute('content')
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: date element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
         
         return None
     
@@ -121,26 +155,35 @@ class YoutubeChecker(webdriver.Edge):
             )
             if date:
                 return date.get_attribute('content')
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: date element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
         
         return None
     
     
     def video_is_family_friendly(self) -> bool:
+        """Check if youtube family friendly meta tag is 'true'"""
         try:
-            date = WebDriverWait(self, 10).until(
+            friendly = WebDriverWait(self, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'meta[itemprop="isFamilyFriendly"]'))
             )
-            if date:
-                return date.get_attribute('content').lower() == 'true'
+            if friendly:
+                return friendly.get_attribute('content').lower() == 'true'
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: video friendly element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
         
         return False
     
     
     def description_text(self) -> Optional[str]:
+        """Retrive the full text of an opened description"""
+        if not self.description_is_opened():
+            self.open_description()
+            
         try:
             description_texts = WebDriverWait(self, 10).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME, 'yt-core-attributed-string--link-inherit-color'))
@@ -151,21 +194,28 @@ class YoutubeChecker(webdriver.Edge):
                     description += section.text + '\n'
                 
                 return description.strip()
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: description_texts element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
         
         return None
     
     
     def open_description(self) -> None:
+        """Open the description if closed"""
+        if self.description_is_opened():
+            return
         try:
             description = WebDriverWait(self, 10).until(
                 EC.presence_of_element_located((By.ID, 'bottom-row'))
             )
             if description:
                 description.click()
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: description element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
             
 
     def description_is_opened(self) -> bool:
@@ -175,13 +225,16 @@ class YoutubeChecker(webdriver.Edge):
             )
             if description:
                 return description.is_displayed()
+        except TimeoutException:
+            youtube_logger.error("TimeoutError: description element not found within the given time.")
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error in title: {e}')
         
         return False
     
     
     def close_description(self) -> None: # Not Working Yet
+        """Close the description if opened"""
         if not self.description_is_opened():
             return
         try:
@@ -191,7 +244,7 @@ class YoutubeChecker(webdriver.Edge):
             if close:
                 close.click()
         except Exception as e:
-            print(f'Unexpected Error: {e}')
+            youtube_logger.exception(f'Unexpected Error: {e}')
     
     
     def video_length(self) -> Optional[str]:
@@ -203,7 +256,34 @@ class YoutubeChecker(webdriver.Edge):
     
     
     def comment_count(self) -> Optional[int]:
-        pass
+        """Retrive the comment count as an integer"""
+        if self.description_is_opened():    # simulate human user 
+            self.close_description()        # only then youtube will allow scrolling
+        else:
+            self.open_description()
+            
+        time.sleep(random.uniform(0.8, 1.2))
+        
+        max_scroll_attempts = 4
+        scroll_attempts = 0
+        scroll_pause_time = random.uniform(1, 1.5)  # Pause between scrolls to mimic human-like behavior
+        scroll_height = 400
+
+        while scroll_attempts < max_scroll_attempts:
+            self.execute_script(f"window.scrollTo(0, {scroll_height});")
+            time.sleep(random.uniform(0.8, 1.2))
+            scroll_height += 400
+            scroll_attempts += 1
+        
+        try:
+            comment_count_element = self.find_element(By.ID, 'leading-section')
+            if comment_count_element:
+                count_text = comment_count_element.text.split(' ')[0]
+                return int(count_text.replace(",", ""))  # Remove commas if present
+        except Exception as e:
+            youtube_logger.exception(f'Unexpected Error: {e}')
+
+        return None
     
     
     def is_subbed(self) -> bool:
