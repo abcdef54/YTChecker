@@ -1,0 +1,33 @@
+2024-10-31 11:39:13,583 - ERROR - yt_action.py - yt_action - close_yt_premium_ad
+Traceback (most recent call last):
+  File "d:\Study\Programming\Github Projects\Selenium\youtube_find\yt_action.py", line 386, in close_yt_premium_ad
+    reject_button = WebDriverWait(self.driver, 10).until(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\support\wait.py", line 105, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00007FF7870BDC75+12853]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF7873683C4+2250276]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF7872A76A6+1460486]
+	(No symbol) [0x00007FF786EB97CC]
+	(No symbol) [0x00007FF786EB990C]
+	(No symbol) [0x00007FF786EF3857]
+	(No symbol) [0x00007FF786ED853F]
+	(No symbol) [0x00007FF786EB0617]
+	(No symbol) [0x00007FF786EF1431]
+	(No symbol) [0x00007FF786ED8163]
+	(No symbol) [0x00007FF786EAFB54]
+	(No symbol) [0x00007FF786EAF000]
+	(No symbol) [0x00007FF786EAF741]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF78723CDB4+1024020]
+	Microsoft::Applications::Events::EventProperty::~EventProperty [0x00007FF786FD9A04+57108]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF78723BDB3+1019923]
+	Microsoft::Applications::Events::EventProperty::empty [0x00007FF78723BA19+1019001]
+	Microsoft::Applications::Events::ILogConfiguration::operator* [0x00007FF78705E031+394913]
+	Microsoft::Applications::Events::ILogConfiguration::operator* [0x00007FF78705A954+380868]
+	Microsoft::Applications::Events::ILogConfiguration::operator* [0x00007FF78705AA99+381193]
+	Microsoft::Applications::Events::ILogConfiguration::operator* [0x00007FF787052296+346374]
+	BaseThreadInitThunk [0x00007FFD66AD257D+29]
+	RtlUserThreadStart [0x00007FFD66C2AF08+40]
+

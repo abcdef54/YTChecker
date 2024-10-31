@@ -1,8 +1,7 @@
-import os
 import logging
 import time
 import random
-from typing import List, Any, Optional, Dict
+from typing import List, Optional
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,9 +9,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service
 from selenium.common.exceptions import TimeoutException
+
+
+from youtube_find.yt_action import YTAction
 import youtube_find.constant as CONST
 
-os.system('cls')
 
 # Config logger
 logging.basicConfig(level=logging.ERROR,
@@ -29,9 +30,29 @@ edge_options.add_experimental_option('detach', True)
 
 
 class YoutubeChecker(webdriver.Edge):
+    """
+    A class for extracting information from YouTube videos.
+    
+    This class provides methods to retrieve various metadata and statistics
+    about YouTube videos, such as title, view count, likes, etc.
+    
+    Attributes:
+        driver_path (str): Path to the Edge webdriver executable
+        auto_closing (bool): Whether to automatically close the browser
+        yt_action (YTAction): Instance of YTAction for performing YouTube actions
+    """
+    
     def __init__(self, driver_path: str = CONST.webdriver_path, auto_closing: bool = False) -> None:
+        """
+        Args:
+            driver_path: Path to the Edge webdriver executable
+            auto_closing: If True, browser will close automatically when done
+        """
+        
         self.driver_path = driver_path
         service = Service(executable_path=self.driver_path)
+        
+        self.yt_action = YTAction(self)
         
         self.auto_closing = auto_closing
         if not self.auto_closing:
@@ -41,8 +62,15 @@ class YoutubeChecker(webdriver.Edge):
 
     
     def open(self, url: str = CONST.base_url,full_screen: bool = False) -> None:
-        """Open a URL and optionally make the window fullscreen."""
+        """
+        Open a YouTube URL and handle initial setup.
+        
+        Args:
+            url: The YouTube URL to open
+            full_screen: Whether to make the window fullscreen
+        """
         self.get(url)
+        self.yt_action.close_yt_premium_ad()
         if full_screen:
             self.fullscreen_window()
     
@@ -206,10 +234,10 @@ class YoutubeChecker(webdriver.Edge):
     
     def comment_count(self) -> Optional[int]:
         """Retrive the comment count as an integer"""
-        if self.description_is_opened():    # simulate human user 
-            self.close_description()        # only then youtube will allow scrolling
+        if self.yt_action.description_is_opened():    # simulate human user 
+            self.yt_action.close_description()        # only then youtube will allow scrolling
         else:
-            self.open_description()
+            self.yt_action.open_description()
             
         time.sleep(random.uniform(0.8, 1.2))
         
@@ -289,4 +317,20 @@ class YoutubeChecker(webdriver.Edge):
     def top_n_comment(self, n: int = 10) -> None:
         pass
     
-        
+    
+    def close(self) -> None:
+        """Safely close the browser and clean up."""
+        try:
+            super().quit()
+        except Exception as e:
+            youtube_logger.exception(f'Error closing browser: {e}')
+            
+    
+    def __enter__(self):
+        """Enable context manager support."""
+        return self
+    
+    
+    def __exit__(self) -> None:
+        """Clean up resources when used as context manager."""
+        self.close()
