@@ -39,7 +39,7 @@ class YoutubeChecker(webdriver.Edge):
     Attributes:
         driver_path (str): Path to the Edge webdriver executable
         auto_closing (bool): Whether to automatically close the browser
-        yt_action (YTAction): Instance of YTAction for performing YouTube actions
+        actions (YTAction): Instance of YTAction for performing YouTube actions
     """
     
     def __init__(self, driver_path: str = CONST.webdriver_path, auto_closing: bool = False) -> None:
@@ -52,7 +52,7 @@ class YoutubeChecker(webdriver.Edge):
         self.driver_path = driver_path
         service = Service(executable_path=self.driver_path)
         
-        self.yt_action = YTAction(self)
+        self.actions = YTAction(self)
         
         self.auto_closing = auto_closing
         if not self.auto_closing:
@@ -70,7 +70,7 @@ class YoutubeChecker(webdriver.Edge):
             full_screen: Whether to make the window fullscreen
         """
         self.get(url)
-        self.yt_action.close_yt_premium_ad()
+        self.actions.close_yt_premium_ad()
         if full_screen:
             self.fullscreen_window()
     
@@ -234,10 +234,10 @@ class YoutubeChecker(webdriver.Edge):
     
     def comment_count(self) -> Optional[int]:
         """Retrive the comment count as an integer"""
-        if self.yt_action.description_is_opened():    # simulate human user 
-            self.yt_action.close_description()        # only then youtube will allow scrolling
+        if self.actions.description_is_opened():    # simulate human user 
+            self.actions.close_description()        # only then youtube will allow scrolling
         else:
-            self.yt_action.open_description()
+            self.actions.open_description()
             
         time.sleep(random.uniform(0.8, 1.2))
         

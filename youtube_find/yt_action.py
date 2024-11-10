@@ -132,6 +132,9 @@ class YTAction:
         Returns:
             bool: True if disliked successful, False otherwise
         """
+        if self.is_dislike():
+            return
+        
         try:
             dislike_button = self.wait_for_element(
                 By.CSS_SELECTOR,
@@ -148,12 +151,66 @@ class YTAction:
     
     
     def is_dislike(self) -> bool:
-        pass
+        """
+        Return True if already disliked the video, False otherwise,
+        """
+        try:
+            dislike_button = self.wait_for_element(
+                By.CSS_SELECTOR,
+                'button[aria-label="Dislike this video"]'
+            )
+            if dislike_button:
+                return dislike_button.get_attribute('aria-pressed') == 'true'
+        except Exception as e:
+            youtube_logger.exception(f'Error While Checking Dislike')
+        
+        return False
     
     
     def comment(self, content: str) -> None:
-        pass
+        """
+        Comment on a youtube video
+        ***Method not usable due to having to log in to comment***
+        """
+        if not content:
+            return
+        try:
+            comment_box = self.wait_for_element(
+                By.ID,
+                'placeholder-area'
+            )
+            if comment_box:
+                self.scroll_to_view(comment_box)
+                time.sleep(0.1)
+                comment_box.click()
+                time.sleep(0.1)
+                comment_box.send_keys(content)
+                time.sleep(0.3)
+                
+                try:
+                    comment_button = self._comment_button()
+                    comment_button.click()
+                except Exception as e:
+                    youtube_logger.error(f'Error clicking comment button: {e}')
+        except Exception as e:
+            youtube_logger.error(f'Error while commenting: {e}')
+                
     
+    def _comment_button(self) -> WebElement | None:
+        """
+        ***Method not usable due to having to log in to comment***
+        """
+        try:
+            comment_button = self.wait_for_element(
+                By.CSS_SELECTOR,
+                'button[aria-label="Comment"]'
+            )
+            if comment_button:
+                return comment_button
+        except Exception as e:
+            youtube_logger.error(f'Error finding comment button: {e}')
+        return None
+        
     
     def to_next_video(self) -> bool:
         """
@@ -234,7 +291,19 @@ class YTAction:
     
     
     def click_search_video(self) -> None:
-        pass
+        """
+        Click on the first video found after searching for something
+        """
+        try:
+            video_title = self.wait_for_element(
+                By.ID,
+                'video-title'
+            )
+            if video_title:
+                self.scroll_to_view(video_title)
+                video_title.click()
+        except Exception as e:
+            youtube_logger.exception(f'Error While Clicking Video')
     
     
     def scroll_to_view(self, element: WebElement) -> None:
@@ -333,7 +402,7 @@ class YTAction:
         return False
     
     
-    def close_description(self) -> None: # Not Working Yet
+    def close_description(self) -> None:
         """Close the description if opened"""
         if not self.description_is_opened():
             return
@@ -349,15 +418,16 @@ class YTAction:
     
     
     def click_video_on_main_page(self) -> None:
-        pass
-    
-    
-    def sign_in(self, username: str, password: str) -> None:
-        pass
-    
-    
-    def sign_out(self) -> None:
-        pass
+        try:
+            video_link = self.wait_for_element(
+                By.ID,
+                'media-container-link'
+            )
+            if video_link:
+                self.scroll_to_view(video_link)
+                video_link.click()
+        except Exception as e:
+            youtube_logger.error(f'Error clicking video: {e}')
     
     
     def visit_channel(self) -> bool:
