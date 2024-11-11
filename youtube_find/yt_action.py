@@ -8,6 +8,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 import logging
 
+import youtube_find.decorators as decorators
 youtube_logger = logging.getLogger('youtube_find.youtube_checker')
 
 class YTAction:
@@ -29,6 +30,7 @@ class YTAction:
         self.driver = driver
     
     
+    @decorators.error_handle
     def wait_for_element(self, by: By, value: str, timeout: int = 10) -> None | WebElement:
         """
         Wait for an element to be present and return it.
@@ -42,19 +44,11 @@ class YTAction:
         Returns:
             WebElement if found, None otherwise
         """
-        try:
-            element = WebDriverWait(self.driver, timeout).until(
-                EC.presence_of_element_located((by, value))
-            )
-            return element
-        
-        except TimeoutException:
-            youtube_logger.error(f"Element not found: {by}={value}")
-            return None
-        except Exception as e:
-            youtube_logger.exception(f"Error finding element: {e}")
-            return None
-    
+        element = WebDriverWait(self.driver, timeout).until(
+            EC.presence_of_element_located((by, value))
+        )
+        return element
+
     
     def search(self, content: str) -> bool:
         """

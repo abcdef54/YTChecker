@@ -1,2 +1,20 @@
-2024-11-10 16:05:41,750 - ERROR - yt_action.py - yt_action - wait_for_element
-2024-11-10 16:05:46,279 - ERROR - yt_action.py - yt_action - comment
+2024-11-11 13:13:14,656 - ERROR - decorators.py - decorators - wrapper
+2024-11-11 13:13:19,473 - ERROR - youtube_checker.py - youtube_checker - banned_regions
+2024-11-11 13:13:19,473 - ERROR - decorators.py - decorators - wrapper
+Traceback (most recent call last):
+  File "d:\Study\Programming\Github Projects\Selenium\youtube_find\decorators.py", line 11, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Study\Programming\Github Projects\Selenium\youtube_find\youtube_checker.py", line 219, in banned_regions
+    with open("Tags.txt", "r") as file:
+         ^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'Tags.txt'
+2024-11-11 13:13:19,473 - ERROR - decorators.py - decorators - wrapper
+Traceback (most recent call last):
+  File "d:\Study\Programming\Github Projects\Selenium\youtube_find\decorators.py", line 11, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Study\Programming\Github Projects\Selenium\youtube_find\youtube_checker.py", line 219, in banned_regions
+    with open("Tags.txt", "r") as file:
+         ^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'Tags.txt'
