@@ -42,7 +42,6 @@ class YoutubeChecker(webdriver.Edge):
     Attributes:
         driver_path (str): Path to the Edge webdriver executable
         auto_closing (bool): Whether to automatically close the browser
-        actions (YTAction): Instance of YTAction for performing YouTube actions
     """
     
     def __init__(self, driver_path: str = CONST.webdriver_path, auto_closing: bool = False) -> None:
@@ -291,7 +290,7 @@ class YoutubeChecker(webdriver.Edge):
     @decorators.error_handle
     def _get_all_element(self, by: By, value: str, wait_time: int = 7) -> Optional[List[WebElement]]:
         elements = WebDriverWait(self, wait_time).until(
-            EC.presence_of_all_elements_located(by, value)
+            EC.presence_of_all_elements_located((by, value))
         )
         if elements:
             return elements

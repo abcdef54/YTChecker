@@ -31,7 +31,7 @@ class YTAction:
     
     
     @decorators.error_handle
-    def wait_for_element(self, by: By, value: str, timeout: int = 10) -> None | WebElement:
+    def wait_for_element(self, by: By, value: str, timeout: int = 7) -> None | WebElement:
         """
         Wait for an element to be present and return it.
         Using 'EC.presence_of_element_located()'
@@ -47,7 +47,9 @@ class YTAction:
         element = WebDriverWait(self.driver, timeout).until(
             EC.presence_of_element_located((by, value))
         )
-        return element
+        if element:
+            return element
+        return None
 
     
     def search(self, content: str) -> bool:
@@ -60,19 +62,12 @@ class YTAction:
         Returns:
             bool: True if search was successful, False otherwise
         """
-        try:
-            search_box = self.wait_for_element(
-                By.NAME,
-                'search_query'
-            )
-            
-            if search_box:
-                search_box.click()
-                search_box.send_keys(content)
-                search_box.submit()
-                return True
-        except Exception as e:
-            youtube_logger.exception(f'Error While Searching: {e}')
+        search_box = self.wait_for_element(By.NAME, 'search_query')
+        if search_box:
+            search_box.click()
+            search_box.send_keys(content)
+            search_box.submit()
+            return True
         return False
     
     
@@ -81,15 +76,9 @@ class YTAction:
         Check if the current video is already liked.
         """
         like_count = self.driver.like_count()
-        try:
-            is_liked = self.driver.find_element(
-                By.CSS_SELECTOR, 
-                f'button[aria-label="like this video along with {like_count:,} other people"]'
-            )
-            if is_liked:
-                return is_liked.get_attribute('aria-pressed') == 'true'
-        except Exception as e:
-            youtube_logger.error(f'Error checking like status: {e}')
+        is_liked = self.wait_for_element(By.CSS_SELECTOR, f'button[aria-label="like this video along with {like_count:,} other people"]')
+        if is_liked:
+            return is_liked.get_attribute('aria-pressed') == 'true'
         return False
     
     
@@ -103,18 +92,12 @@ class YTAction:
         if self.is_liked():
             return
         
-        try:
-            like_count = self.driver.like_count()
-            like_button = self.wait_for_element(
-                By.CSS_SELECTOR,
-                f'button[aria-label="like this video along with {like_count:,} other people"]'
-            )
-            if like_button:
-                self.scroll_to_view(like_button)
-                like_button.click()
-                return True
-        except Exception as e:
-            youtube_logger.exception(f"Error liking video: {e}")
+        like_count = self.driver.like_count()
+        like_button = self.wait_for_element(By.CSS_SELECTOR, f'button[aria-label="like this video along with {like_count:,} other people"]')
+        if like_button:
+            self.scroll_to_view(like_button)
+            like_button.click()
+            return True
         
         return False
     
@@ -128,19 +111,11 @@ class YTAction:
         """
         if self.is_dislike():
             return
-        
-        try:
-            dislike_button = self.wait_for_element(
-                By.CSS_SELECTOR,
-                'button[aria-label="Dislike this video"]'
-            )
-            if dislike_button:
-                self.scroll_to_view(dislike_button)
-                dislike_button.click()
-                return True
-        except Exception as e:
-            youtube_logger.error(f'Error While Disliking: {e}')
-        
+        dislike_button = self.wait_for_element(By.CSS_SELECTOR, 'button[aria-label="Dislike this video"]')
+        if dislike_button:
+            self.scroll_to_view(dislike_button)
+            dislike_button.click()
+            return True
         return False
     
     
@@ -148,16 +123,9 @@ class YTAction:
         """
         Return True if already disliked the video, False otherwise,
         """
-        try:
-            dislike_button = self.wait_for_element(
-                By.CSS_SELECTOR,
-                'button[aria-label="Dislike this video"]'
-            )
-            if dislike_button:
-                return dislike_button.get_attribute('aria-pressed') == 'true'
-        except Exception as e:
-            youtube_logger.exception(f'Error While Checking Dislike')
-        
+        dislike_button = self.wait_for_element(By.CSS_SELECTOR, 'button[aria-label="Dislike this video"]')
+        if dislike_button:
+            return dislike_button.get_attribute('aria-pressed') == 'true'
         return False
     
     
@@ -168,41 +136,31 @@ class YTAction:
         """
         if not content:
             return
-        try:
-            comment_box = self.wait_for_element(
-                By.ID,
-                'placeholder-area'
-            )
-            if comment_box:
-                self.scroll_to_view(comment_box)
-                time.sleep(0.1)
-                comment_box.click()
-                time.sleep(0.1)
-                comment_box.send_keys(content)
-                time.sleep(0.3)
-                
-                try:
-                    comment_button = self._comment_button()
-                    comment_button.click()
-                except Exception as e:
-                    youtube_logger.error(f'Error clicking comment button: {e}')
-        except Exception as e:
-            youtube_logger.error(f'Error while commenting: {e}')
+        
+        comment_box = self.wait_for_element(By.ID, 'placeholder-area')
+        if comment_box:
+            self.scroll_to_view(comment_box)
+            time.sleep(0.1)
+            comment_box.click()
+            time.sleep(0.1)
+            comment_box.send_keys(content)
+            time.sleep(0.3)
+            
+            try:
+                comment_button = self._comment_button()
+                comment_button.click()
+            except Exception as e:
+                youtube_logger.error(f'Error clicking comment button: {e}')
                 
     
     def _comment_button(self) -> WebElement | None:
         """
         ***Method not usable due to having to log in to comment***
         """
-        try:
-            comment_button = self.wait_for_element(
-                By.CSS_SELECTOR,
-                'button[aria-label="Comment"]'
-            )
-            if comment_button:
-                return comment_button
-        except Exception as e:
-            youtube_logger.error(f'Error finding comment button: {e}')
+        comment_button = self.wait_for_element(By.CSS_SELECTOR, 'button[aria-label="Comment"]')
+        if comment_button:
+            return comment_button
+
         return None
         
     
@@ -213,17 +171,11 @@ class YTAction:
         Returns:
             bool: True if navigation successful, False otherwise
         """
-        try:
-            next_button = self.wait_for_element(
-                By.CSS_SELECTOR, 
-                'a[aria-label="Next keyboard shortcut SHIFT+n"]'
-            )
-            if next_button:
-                self.scroll_to_view(next_button)
-                next_button.click()
-                return True
-        except Exception as e:
-            youtube_logger.error(f'Error navigating to next video: {e}')
+        next_button = self.wait_for_element(By.CSS_SELECTOR, 'a[aria-label="Next keyboard shortcut SHIFT+n"]')
+        if next_button:
+            self.scroll_to_view(next_button)
+            next_button.click()
+            return True
         return False
     
     
@@ -288,16 +240,13 @@ class YTAction:
         """
         Click on the first video found after searching for something
         """
-        try:
-            video_title = self.wait_for_element(
-                By.ID,
-                'video-title'
-            )
-            if video_title:
-                self.scroll_to_view(video_title)
-                video_title.click()
-        except Exception as e:
-            youtube_logger.exception(f'Error While Clicking Video')
+        video_title = self.wait_for_element(
+            By.ID,
+            'video-title'
+        )
+        if video_title:
+            self.scroll_to_view(video_title)
+            video_title.click()
     
     
     def scroll_to_view(self, element: WebElement) -> None:
@@ -307,8 +256,8 @@ class YTAction:
         Args:
             element: Element to scroll to
         """
-        self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
-        time.sleep(random.uniform(0.5, 1.0))
+        if element.is_displayed():
+            self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
     
     
     def is_subbed(self) -> bool:
@@ -318,15 +267,12 @@ class YTAction:
         Returns:
             bool: True if subscribed, False otherwise
         """
-        try:
-            is_sub = self.wait_for_element(
-                By.CLASS_NAME, 
-                'yt-spec-button-shape-next__button-text-content'
-            )
-            if is_sub:
-                return is_sub.text == 'Subscribed'
-        except Exception as e:
-            youtube_logger.error(f'Error checking subscription status: {e}')
+        is_sub = self.wait_for_element(
+            By.CLASS_NAME, 
+            'yt-spec-button-shape-next__button-text-content'
+        )
+        if is_sub:
+            return is_sub.text == 'Subscribed'
         return False
     
     
@@ -334,65 +280,46 @@ class YTAction:
         """Subscribe to the channel if not already subscribed."""
         if self.is_subbed():
                 return
-        try:
-            sub_button = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'subscribe-button'))
-            )
-            if sub_button:
-                self.scroll_to_view(sub_button)
-                sub_button.click()
-        except TimeoutException:
-            youtube_logger.error(f'Timeout: dislike element not found within the given time')
-        except Exception as e:
-            youtube_logger.error(f'Unexpected Error: {e}')
+
+        sub_button = self.wait_for_element(
+            By.ID,
+            'subscribe-button'
+        )
+        if sub_button:
+            self.scroll_to_view(sub_button)
+            sub_button.click()
     
-    
+
     def unsub(self) -> None:
         """Unsubscribe from the channel if currently subscribed."""
         if not self.is_subbed():
             return
 
-        try:
-            sub_button = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'button[aria-label="Unsubscribe"]'))
-            )
-            if sub_button:
-                sub_button.click()
-        except TimeoutException:
-            youtube_logger.error(f'Timeout: dislike element not found within the given time')
-        except Exception as e:
-            youtube_logger.error(f'Unexpected Error: {e}')
+        sub_button = self.wait_for_element(
+            By.CSS_SELECTOR,
+            'button[aria-label="Unsubscribe"]'
+        )
+        if sub_button:
+            sub_button.click()
     
     
     def open_description(self) -> None:
         """Open the description if closed"""
         if self.description_is_opened():
             return
-        try:
-            description = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'bottom-row'))
-            )
-            if description:
-                self.scroll_to_view(description)
-                description.click()
-        except TimeoutException:
-            youtube_logger.error("TimeoutError: description element not found within the given time.")
-        except Exception as e:
-            youtube_logger.exception(f'Unexpected Error in title: {e}')
+        
+        description = self.wait_for_element(By.ID, 'bottom-row')
+        
+        if description:
+            self.scroll_to_view(description)
+            description.click()
             
 
     def description_is_opened(self) -> bool:
-        try:
-            description = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'collapse'))
-            )
-            if description:
-                return description.is_displayed()
-        except TimeoutException:
-            youtube_logger.error("TimeoutError: description element not found within the given time.")
-        except Exception as e:
-            youtube_logger.exception(f'Unexpected Error in title: {e}')
-        
+        description = self.wait_for_element(By.ID, 'collapse')
+        if description:
+            return description.is_displayed()
+    
         return False
     
     
@@ -400,28 +327,18 @@ class YTAction:
         """Close the description if opened"""
         if not self.description_is_opened():
             return
-        try:
-            close = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'collapse'))
-            )
-            if close:
-                self.scroll_to_view(close)
-                close.click()
-        except Exception as e:
-            youtube_logger.exception(f'Unexpected Error: {e}')
+        
+        close = self.wait_for_element(By.ID, 'collapse')
+        if close:
+            self.scroll_to_view(close)
+            close.click()
     
     
     def click_video_on_main_page(self) -> None:
-        try:
-            video_link = self.wait_for_element(
-                By.ID,
-                'media-container-link'
-            )
-            if video_link:
-                self.scroll_to_view(video_link)
-                video_link.click()
-        except Exception as e:
-            youtube_logger.error(f'Error clicking video: {e}')
+        video_link = self.wait_for_element(By.ID, 'media-container-link')
+        if video_link:
+            self.scroll_to_view(video_link)
+            video_link.click()
     
     
     def visit_channel(self) -> bool:
@@ -431,17 +348,11 @@ class YTAction:
         Returns:
             bool: True if navigation to channel successful, False otherwise
         """
-        try:
-            channel_name = self.wait_for_element(
-                By.ID,
-                'channel-name'
-            )
-            if channel_name:
-                self.scroll_to_view(channel_name)
-                channel_name.click()
-                return True
-        except Exception as e:
-            youtube_logger.exception(f'Error visiting channel: {e}')
+        channel_name = self.wait_for_element(By.ID, 'channel-name')
+        if channel_name:
+            self.scroll_to_view(channel_name)
+            channel_name.click()
+            return True
         return False
             
     
@@ -449,14 +360,7 @@ class YTAction:
         """
         Close the YouTube Premium advertisement popup if present.
         """
-        try:
-            reject_button = self.wait_for_element(
-                By.CSS_SELECTOR,
-                'button[aria-label="No thanks"]',
-                timeout= 7
-            )
-            if reject_button:
-                reject_button.click()
-        except:
-            youtube_logger.exception(f'Youtube Premium Ad Not Found')
+        reject_button = self.wait_for_element(By.CSS_SELECTOR, 'button[aria-label="No thanks"]')
+        if reject_button:
+            reject_button.click()
             
