@@ -1,7 +1,5 @@
 from youtube_find.youtube_checker import YoutubeChecker
 
-import time
-
 bot = YoutubeChecker()
 infos = bot.retrieve_infos('https://www.youtube.com/watch?v=2Gtl2BKp4gY')
 for key,value in infos.items():

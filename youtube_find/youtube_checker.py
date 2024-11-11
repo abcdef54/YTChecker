@@ -286,6 +286,8 @@ class YoutubeChecker(webdriver.Edge):
             else:
                 return element
         
+        raise Exception(f'ElementNotFoundException: Could not locate element {by}="{value}"')
+        
         
     @decorators.error_handle
     def _get_all_element(self, by: By, value: str, wait_time: int = 7) -> Optional[List[WebElement]]:
@@ -295,6 +297,7 @@ class YoutubeChecker(webdriver.Edge):
         if elements:
             return elements
     
+        raise Exception(f'ElementNotFoundException: Could not locate element {by}="{value}"')
     
     @staticmethod
     def _format_video_length(length: str) -> str:
