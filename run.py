@@ -1,7 +1,8 @@
 from youtube_find.youtube_checker import YoutubeChecker
 
 bot = YoutubeChecker()
-infos = bot.retrieve_infos('https://www.youtube.com/watch?v=2Gtl2BKp4gY')
+infos = bot.retrieve_infos('https://www.youtube.com/watch?v=aXuYQ9v_j9M')
+
 for key,value in infos.items():
     print(f'{key}: {value}\n')
 """

@@ -206,6 +206,11 @@ class YTAction:
         time.sleep(random.uniform(*wait_time))
         return True
     
+    
+    def pause_video(self) -> None:
+        pass
+    
+    
     def click_search_video(self) -> None:
         """
         Click on the first video found after searching for something

@@ -89,9 +89,12 @@ class YoutubeChecker(webdriver.Edge):
     
     def like_count(self) -> Optional[int]:
         """Retrive the like count as an integer"""
-        like_count = self._get_element_attribute(By.CSS_SELECTOR, 'meta[itemprop="interactionCount"]')
+        like_count = self._get_element_attribute(By.CSS_SELECTOR, 'button[title="I like this"]', 'aria-label')
         if like_count:
-            return int(like_count)
+            like_count = like_count.split(' ')
+            for token in like_count:
+                if token.replace(',','').isdigit():
+                    return int(token.replace(',',''))
         return None
         
     
@@ -152,7 +155,7 @@ class YoutubeChecker(webdriver.Edge):
             
         time.sleep(random.uniform(0.8, 1.2))
         
-        max_scroll_attempts = 4
+        max_scroll_attempts = 5
         scroll_attempts = 0
         scroll_pause_time = random.uniform(0.1, 0.4)  # Pause between scrolls to mimic human-like behavior
         scroll_height = 400
@@ -235,21 +238,21 @@ class YoutubeChecker(webdriver.Edge):
         
         infos = {
             'Title' : self.title(),
-            'Length' : self.video_length(),
-            'View' : self.view_count(),
-            'Like' : self.like_count(),
-            'CommentCount' : self.comment_count(),
-            'Date' : self.date_upload(),
+            'Video Length' : self.video_length(),
+            'View Count' : self.view_count(),
+            'Like Count' : self.like_count(),
+            'Comment Count' : self.comment_count(),
+            'Upload Date' : self.date_upload(),
             'ChannelName' : self.channel_name(),
-            'SubCount' : self.sub_count(),
+            'Sub Count' : self.sub_count(),
             'Description' : self.description_text(),
-            'URL' : self.url(),
+            'Video URL' : self.url(),
             'Thumbnail' : self.thumbnail(),
-            'FamilyFriendly' : self.video_is_family_friendly(),
-            'Genre' : self.video_genre(),
+            'Family Friendly' : self.video_is_family_friendly(),
+            'Video Genre' : self.video_genre(),
             'KeyWords' : self.keywords_tags(),
-            'BannedRegions' : self.banned_regions(),
-            'RegionsAllowed' : self.regions_allowed()
+            'Banned Regions' : self.banned_regions(),
+            'Allowed Regions' : self.regions_allowed()
         }
         return infos
     
