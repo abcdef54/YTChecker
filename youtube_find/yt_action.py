@@ -80,7 +80,7 @@ class YTAction:
         """
         Check if the current video is already liked.
         """
-        like_count = self.driver.like_count()
+        like_count : int = self.driver.like_count()
         like_button = self.wait_for_element(
             By.CSS_SELECTOR, f'button[aria-label="like this video along with {like_count:,} other people"]'
         )
@@ -93,15 +93,13 @@ class YTAction:
         Returns:
             bool: True if like successful, False otherwise
         """
-        if self.is_liked():
-            return False
         
         like_count = self.driver.like_count()
         like_button = self.wait_for_element(
             By.CSS_SELECTOR, f'button[aria-label="like this video along with {like_count:,} other people"]'
         )
         self.scroll_to_view(like_button)
-        like_button.click()
+        self.click_element(like_button)
         return True
 
     def dislike(self) -> bool:
@@ -111,12 +109,10 @@ class YTAction:
         Returns:
             bool: True if disliked successfully, False otherwise
         """
-        if self.is_dislike():
-            return False
         
         dislike_button = self.wait_for_element(By.CSS_SELECTOR, 'button[aria-label="Dislike this video"]')
         self.scroll_to_view(dislike_button)
-        dislike_button.click()
+        self.click_element(dislike_button)
         return True
 
     def is_dislike(self) -> bool:
@@ -208,7 +204,19 @@ class YTAction:
     
     
     def pause_video(self) -> None:
-        pass
+        """
+        Click on the pause button of the video
+        """
+        pause_button = self.wait_for_element(By.CSS_SELECTOR, '.ytp-play-button.ytp-button')
+        if pause_button:
+            self.scroll_to_view(pause_button)
+            self.click_element(pause_button)
+            
+    def is_playing(self) -> bool:
+        button = self.wait_for_element(By.CSS_SELECTOR, '.ytp-play-button.ytp-button')
+        if button:
+            button = button.get_attribute('aria-label')
+            return button.split(' ')[0] == 'Pause'
     
     
     def click_search_video(self) -> None:
@@ -226,8 +234,12 @@ class YTAction:
         Args:
             element: Element to scroll to
         """
-        if element.is_displayed():
-            self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
+        self.driver.execute_script("arguments[0].scrollIntoViewIfNeeded(true);", element)
+        time.sleep(0.1)
+            
+    def click_element(self, element: WebElement) -> None:
+        if element:
+            self.driver.execute_script("arguments[0].click();", element)
     
     def is_subbed(self) -> bool:
         """
@@ -243,19 +255,21 @@ class YTAction:
         """
         Subscribe to the current video channel if not already subscribed.
         """
-        if not self.is_subbed():
-            subscribe_button = self.wait_for_element(By.CLASS_NAME, 'yt-spec-button-shape-next__button-text-content')
-            self.scroll_to_view(subscribe_button)
-            subscribe_button.click()
+        subscribe_button = self.wait_for_element(By.XPATH, '//*[@id="subscribe-button-shape"]/button')
+        self.scroll_to_view(subscribe_button)
+        subscribe_button.click()
     
     def un_sub(self) -> None:
         """
         Unsubscribe from the current video channel if already subscribed.
         """
         if self.is_subbed():
-            unsubscribe_button = self.wait_for_element(By.CSS_SELECTOR, 'button[aria-label="Unsubscribe from this channel"]')
+            unsubscribe_button = self.wait_for_element(By.CSS_SELECTOR, '//*[@id="notification-preference-button"]/ytd-subscription-notification-toggle-button-renderer-next/yt-button-shape/button')
             self.scroll_to_view(unsubscribe_button)
             unsubscribe_button.click()
+            unsub_button = self.wait_for_element(By.XPATH, '//*[@id="items"]/ytd-menu-service-item-renderer[4]/tp-yt-paper-item/yt-formatted-string')
+            if unsub_button:
+                unsub_button.click()
     
     
     def open_description(self) -> None:
