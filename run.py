@@ -1,17 +1,8 @@
-from youtube_find.youtube_checker import YoutubeChecker
+from gui_app.yt_checker_app import YoutubeCheckerApp
+from PyQt6.QtWidgets import QApplication
+import sys
 
-bot = YoutubeChecker()
-infos = bot.retrieve_infos('https://www.youtube.com/watch?v=aXuYQ9v_j9M')
-
-for key,value in infos.items():
-    print(f'{key}: {value}\n')
-"""
-bot.open('https://www.youtube.com/watch?v=2Gtl2BKp4gY')
-bot.implicitly_wait(5)
-print(f'Title: {bot.title()}')
-print(f'URL: {bot.url()}')
-print(f'View: {bot.view_count}')
-print(f'Like: {bot.like_count()}')
-print(dat)
-
-"""
+app = QApplication(sys.argv)
+youtube = YoutubeCheckerApp()
+youtube.show()
+sys.exit(app.exec())

@@ -1,1 +1,0 @@
-top_half = QHBoxLayout(top_half_widget)

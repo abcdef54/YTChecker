@@ -6,7 +6,7 @@ import re
 import logging
 
 
-from app_button_handler import AppButtonHandler
+from gui_app.app_button_handler import AppButtonHandler
 import youtube_find.constant as CONST
 
 youtube_logger = logging.getLogger('youtube_find.youtube_checker')
@@ -74,7 +74,6 @@ class YoutubeCheckerApp(QWidget):
         self.youtube_logo_label.setPixmap(youtube_logo)
         self.youtube_logo_label.setScaledContents(True)
         self.youtube_logo_label.setFixedSize(75, 75)
-        self.youtube_logo_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
             
         self.text_area = QTextEdit(self)
         self.text_area.setReadOnly(True)
@@ -95,130 +94,132 @@ class YoutubeCheckerApp(QWidget):
     def set_layout(self) -> None:
         master_layout = QVBoxLayout()
 
-        # Top part of the main window (YouTube Logo and Thumbnail)
-        top_half_widget = QWidget()
-        top_half_widget.setObjectName("topHalfWidget")
-        top_half_layout = QHBoxLayout(top_half_widget)
-        top_half_layout.addWidget(self.youtube_logo_label, 2)
-        top_half_layout.addWidget(self.thumbnail_url_label, 8)
-
-        # Middle part of the main window (URL Entry Area)
+        # Top part of the main window
+        top_half = QHBoxLayout()  # Add layout directly to this widget
+        top_half.addWidget(self.youtube_logo_label, 2, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        top_half.addWidget(self.thumbnail_url_label, 8)
+        
+        
+        # Middle part of the main window
         middle_master = QHBoxLayout()
-        middle_master.setObjectName("urlEntryArea")
         middle_master.addWidget(self.back_button, 1)
         middle_master.addWidget(self.refresh_button, 1)
         middle_master.addWidget(self.search_box, 7)
         middle_master.addWidget(self.forward_button, 1)
         middle_master.setContentsMargins(0, 15, 0, 15)
-
-        # Bottom part of the main window (Text Area and Action Buttons)
+        
+        
+        # Bottom part of the main window
         bottom_half = QHBoxLayout()
-
-        # Left part of the bottom half (Label Buttons)
+        
+        # Middle part of the bottom half
+        middle_bottom_half = QVBoxLayout()
+        middle_bottom_half.addWidget(self.text_area)
+        middle_bottom_half.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        
+        # Left part of the bottom half
         left_side_bottom_half = QVBoxLayout()
         left_side_bottom_half.addWidget(self.label_button_list)
 
-        # Middle part of the bottom half (Text Area)
-        middle_bottom_half = QVBoxLayout()
-        middle_bottom_half_widget = QWidget()
-        middle_bottom_half_widget.setObjectName("textArea")
-        middle_bottom_half.addWidget(self.text_area)
-        middle_bottom_half_widget.setLayout(middle_bottom_half)
-
-        # Right part of the bottom half (Action Buttons)
+        
+        # Right part of the bottom half
         right_side_bottom_half = QVBoxLayout()
-        right_side_bottom_half_widget = QWidget()
-        right_side_bottom_half_widget.setObjectName("actionButtons")
         for button in self.action_buttons:
             if button not in (self.back_button, self.forward_button, self.refresh_button):
                 right_side_bottom_half.addWidget(button)
-        right_side_bottom_half_widget.setLayout(right_side_bottom_half)
+     
 
+        
         bottom_half.addLayout(left_side_bottom_half, 2)
-        bottom_half.addWidget(middle_bottom_half_widget, 7)
-        bottom_half.addWidget(right_side_bottom_half_widget, 1)
+        bottom_half.addLayout(middle_bottom_half,7)
+        bottom_half.addLayout(right_side_bottom_half,1)
 
-        # Add layouts to the main layout
-        master_layout.addWidget(top_half_widget, 2)
-        master_layout.addLayout(middle_master, 1)
-        master_layout.addLayout(bottom_half, 7)
+        # Add the bottom layout to the main layout
+        master_layout.addLayout(top_half, 2)
+        master_layout.addLayout(middle_master, 2)
+        master_layout.addLayout(bottom_half, 6)
 
-        # Set the main layout of the window
+        # Set the layout of the window
         self.setLayout(master_layout)
     
     
     def set_style(self) -> None:
+        self.clear_button.setObjectName('ClearButton')
+        self.retrive_button.setObjectName('RetreiveButton')
+        
         self.setStyleSheet("""
-                        QWidget {
-                            background-color: #262625;
-                        }
-
-                        #topHalfWidget {
-                            background-color: #4D0000;
-                        }
-                        
-                        /* Middle section (URL Entry Area) */
-                        #urlEntryArea {
-                            background-color: #262625;
-                        }
-                        
-                        QPushButton {
-                            background-color: #5a5a5a;
-                            padding: 6px;
-                            color: #dbd9d9;
-                            font-weight: bold;
-                            font-size: 12px;
-                            border-radius: 5px;
-                        }
-                        
-                        QPushButton:hover {
-                            background-color: #7a7a7a;
-                        }
-
-                        QPushButton:pressed {
-                            background-color: #4a4a4a;
-                        }
-                        
-                        QPushButton#back_button {
-                            color: red; /* Color for Backward button text */
-                        }
-                        
-                        QLineEdit {
-                            background-color: #dbd9d9;
-                            color: #1a1919;
-                            font-weight: bold;
-                            font-size: 12px;
-                            border-radius: 3px;
-                        }
-                        
-                        #textArea {
-                            background-color: #505050;
-                            color: #dbd9d9;
-                            font-weight: bold;
-                            border-radius: 8px;
-                            margin-left: 7px;
-                            margin-right: 7px;
-                        }
-                        
-                        #actionButtons {
-                            background-color: #d3d3d3; /* Light grey background */
-                        }
-
-                        QListWidget {
-                            background-color: #dbd9d9;
-                            color: #1a1919;
-                            font-weight: bold;
-                            font-size: 12px;
-                            border-radius: 2px;
-                        }
-                        
-                        QListWidget::item:selected {
-                            background-color: #3b8ced;
-                            color: white;
-                            border: 1px solid #5a5a5a;
-                        }
-
-                        """)
+                           QWidgets{
+                               background-color: #262625;
+                           }
+                           
+                           QPushButton{
+                               background-color: #333230;
+                               padding: 2px;
+                               color: #dbd9d9;
+                               font-weight: bold;
+                               font-size: 12px;
+                               border-radius: 4px;
+                           }
+                           
+                           QPushButton:hover{
+                               background-color: #7a7a7a;
+                           }
+                           
+                           QPushButton:pressed{
+                               background-color: #4a4a4a;
+                           }
+                           
+                           QPushButton#ClearButton{
+                               background-color: #8a3511;
+                               color: #bfbfbf;
+                           }
+                           
+                           QPushButton#ClearButton:hover{
+                               background-color: #a1351d;
+                           }
+                           
+                           QPushButton#RetreiveButton{
+                               background-color: #a68221;
+                               color: #bfbfbf;
+                           }
+                           
+                           QPushButton#RetreiveButton:hover{
+                               background-color: #c79306;
+                           }
+                           
+                           QLineEdit{
+                               background-color: #dbd9d9;
+                               color: #1a1919;
+                               font-weight: bold;
+                               font-size: 12px;
+                               border-radius: 3px;
+                           }
+                           
+                           
+                           QListWidget{
+                               background-color: #dbd9d9;
+                               color: #1a1919;
+                               font-weight: bold;
+                               font-size: 12px;
+                               border-radius: 2px;
+                           }
+                           
+                           QListWidget::item:selected{
+                                background-color: #292828;
+                                color: white;
+                                border: 1px solid #a8a7a7;
+                           }
+                           
+                           QTextEdit{
+                               background-color: #302e2e;
+                               color: #dbd9d9;
+                               font-weight: bold;
+                               border-radius: 8px;
+                               margin-left: 7px;
+                               margin-right: 7px;
+                           }
+                           """)
     
 
     def button_pressed(self) -> None:
